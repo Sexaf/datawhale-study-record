@@ -1,0 +1,9 @@
+import pandas as pd
+train = pd.read_csv('train.csv')
+testA = pd.read_csv('testA.csv')
+print('Train data shape:',train.shape)
+print('TestA data shape:',testA.shape)
+
+结果：
+Train data shape: (800000, 47)
+TestA data shape: (200000, 48)
