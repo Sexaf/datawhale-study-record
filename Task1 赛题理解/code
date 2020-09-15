@@ -1,3 +1,4 @@
+将数据导入，并对数据进行初步的观察 了解
 import pandas as pd
 train = pd.read_csv('train.csv')
 testA = pd.read_csv('testA.csv')
@@ -7,3 +8,5 @@ print('TestA data shape:',testA.shape)
 结果：
 Train data shape: (800000, 47)
 TestA data shape: (200000, 48)
+
+
