@@ -1,0 +1,53 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import datetime
+from tqdm import tqdm
+from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+from sklearn.preprocessing import MinMaxScaler
+import xgboost as xgb
+import lightgbm as lgb
+from catboost import CatBoostRegressor
+import warnings
+from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, log_loss
+warnings.filterwarnings('ignore')
+
+data_train =pd.read_csv('/home/kesci/input/dataset14260/train.csv')
+data_test_a = pd.read_csv('/home/kesci/input/dataset14260/testA.csv')
+
+numerical_fea = list(data_train.select_dtypes(exclude=['object']).columns)         #查找数据中的对象特征和数值特征
+category_fea = list(filter(lambda x: x not in numerical_fea,list(data_train.columns)))
+label = 'isDefault'
+numerical_fea.remove(label)
+
+#按照平均数填充数值型特征
+data_train[numerical_fea] = data_train[numerical_fea].fillna(data_train[numerical_fea].median())
+data_test_a[numerical_fea] = data_test_a[numerical_fea].fillna(data_train[numerical_fea].median())
+#按照众数填充类别型特征
+data_train[category_fea] = data_train[category_fea].fillna(data_train[category_fea].mode())
+data_test_a[category_fea] = data_test_a[category_fea].fillna(data_train[category_fea].mode())
+
+#转化成时间格式
+for data in [data_train, data_test_a]:
+    data['issueDate'] = pd.to_datetime(data['issueDate'],format='%Y-%m-%d')
+    startdate = datetime.datetime.strptime('2007-06-01', '%Y-%m-%d')
+    #构造时间特征
+    data['issueDateDT'] = data['issueDate'].apply(lambda x: x-startdate).dt.days
+    
+data_train['employmentLength'].value_counts(dropna=False).sort_index()
+
+def employmentLength_to_int(s):
+    if pd.isnull(s):
+        return s
+    else:
+        return np.int8(s.split()[0])
+for data in [data_train, data_test_a]:
+    data['employmentLength'].replace(to_replace='10+ years', value='10 years', inplace=True)
+    data['employmentLength'].replace('< 1 year', '0 years', inplace=True)
+    data['employmentLength'] = data['employmentLength'].apply(employmentLength_to_int)
+
+data['employmentLength'].value_counts(dropna=False).sort_index()
