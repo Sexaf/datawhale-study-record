@@ -51,3 +51,33 @@ for data in [data_train, data_test_a]:
     data['employmentLength'] = data['employmentLength'].apply(employmentLength_to_int)
 
 data['employmentLength'].value_counts(dropna=False).sort_index()
+
+# 部分类别特征
+cate_features = ['grade', 'subGrade', 'employmentTitle', 'homeOwnership', 'verificationStatus', 'purpose', 'postCode', 'regionCode', \
+                 'applicationType', 'initialListStatus', 'title', 'policyCode']
+for f in cate_features:
+    print(f, '类型数：', data[f].nunique())
+for data in [data_train, data_test_a]:
+    data['grade'] = data['grade'].map({'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7})
+# 类型数在2之上，又不是高维稀疏的,且纯分类特征
+for data in [data_train, data_test_a]:
+    data = pd.get_dummies(data, columns=['subGrade', 'homeOwnership', 'verificationStatus', 'purpose', 'regionCode'], drop_first=True)
+    
+    
+    
+#异常值的处理
+def find_outliers_by_3segama(data,fea):
+    data_std = np.std(data[fea])
+    data_mean = np.mean(data[fea])
+    outliers_cut_off = data_std * 3
+    lower_rule = data_mean - outliers_cut_off
+    upper_rule = data_mean + outliers_cut_off
+    data[fea+'_outliers'] = data[fea].apply(lambda x:str('异常值') if x > upper_rule or x < lower_rule else '正常值')
+    return data
+data_train = data_train.copy()
+for fea in numerical_fea:
+    data_train = find_outliers_by_3segama(data_train,fea)
+    print(data_train[fea+'_outliers'].value_counts())
+    print(data_train.groupby(fea+'_outliers')['isDefault'].sum())
+    print('*'*10)
+
